@@ -74,3 +74,9 @@ async def app_client(rsa_keypair, postgres_url) -> AsyncIterator[AsyncClient]:
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+    # The engine is module-level so it gets reused across tests, but its
+    # asyncpg pool binds to whichever event loop first opened a connection.
+    # pytest-asyncio creates a fresh loop per test, so dispose here to release
+    # the bound connections — the next test will reconnect on its own loop.
+    await engine.dispose()
