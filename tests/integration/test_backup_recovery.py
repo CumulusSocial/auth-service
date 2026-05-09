@@ -14,7 +14,6 @@ import uuid
 
 import pytest
 
-
 _PG_TOOLS_AVAILABLE = (
     shutil.which("pg_dump") is not None and shutil.which("pg_restore") is not None
 )
@@ -39,7 +38,7 @@ async def test_pg_dump_then_restore_round_trip(app_client, postgres_url, tmp_pat
     # 2. Dump.
     libpq = _libpq_url(postgres_url)
     dump = tmp_path / "backup.dump"
-    subprocess.run(
+    subprocess.run(  # noqa: ASYNC221 — pg_dump is a one-shot subprocess; blocking is fine in this test
         ["pg_dump", "--format=custom", "--no-owner", "--dbname", libpq,
          "--file", str(dump)],
         check=True,
@@ -54,7 +53,7 @@ async def test_pg_dump_then_restore_round_trip(app_client, postgres_url, tmp_pat
         await conn.exec_driver_sql('CREATE EXTENSION IF NOT EXISTS "pgcrypto"')
 
     # 4. Restore.
-    subprocess.run(
+    subprocess.run(  # noqa: ASYNC221 — pg_restore is a one-shot subprocess; blocking is fine in this test
         ["pg_restore", "--no-owner", "--dbname", libpq, str(dump)],
         check=True,
     )

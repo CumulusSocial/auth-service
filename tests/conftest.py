@@ -55,8 +55,8 @@ async def app_client(rsa_keypair, postgres_url) -> AsyncIterator[AsyncClient]:
     get_settings.cache_clear()
 
     from auth_service.db import engine  # noqa: PLC0415
-    from auth_service.models.base import Base  # noqa: PLC0415
     from auth_service.models import user as _user_model  # noqa: F401, PLC0415
+    from auth_service.models.base import Base  # noqa: PLC0415
 
     # ensure pgcrypto for gen_random_uuid()
     async with engine.begin() as conn:
@@ -66,9 +66,11 @@ async def app_client(rsa_keypair, postgres_url) -> AsyncIterator[AsyncClient]:
     from auth_service.main import app  # noqa: PLC0415
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        async with app.router.lifespan_context(app):
-            yield client
+    async with (
+        AsyncClient(transport=transport, base_url="http://test") as client,
+        app.router.lifespan_context(app),
+    ):
+        yield client
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
