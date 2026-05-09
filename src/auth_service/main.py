@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from auth_service.api import auth as auth_router
 from auth_service.api import health as health_router
+from auth_service.api import oauth as oauth_router
 from auth_service.config import settings
 from auth_service.logging import configure_logging, log
 from auth_service.security.jwt import load_keys
@@ -53,4 +54,5 @@ async def unhandled_exception(request: Request, exc: Exception) -> JSONResponse:
 
 
 app.include_router(auth_router.router, tags=["auth"])
+app.include_router(oauth_router.router, tags=["oauth"])
 app.include_router(health_router.router, tags=["health"])

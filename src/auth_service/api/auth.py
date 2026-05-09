@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -13,6 +14,7 @@ from auth_service.schemas.auth import (
     LoginResponse,
     RegisterRequest,
     RegisterResponse,
+    UserPublic,
     ValidateResponse,
 )
 from auth_service.security.jwt import Keys, issue_token
@@ -20,6 +22,8 @@ from auth_service.services.users import (
     EmailAlreadyRegistered,
     InvalidCredentials,
     authenticate,
+    get_by_display_name,
+    get_by_id,
     register_user,
 )
 
@@ -67,6 +71,28 @@ async def validate(
 ) -> ValidateResponse:
     user_id, email = user
     return ValidateResponse(user_id=user_id, email=email)
+
+
+@router.get("/users/{user_id}", response_model=UserPublic)
+async def get_user(
+    user_id: uuid.UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> UserPublic:
+    user = await get_by_id(session, user_id)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+    return UserPublic(user_id=user.id, display_name=user.display_name)
+
+
+@router.get("/users/by-name/{display_name}", response_model=UserPublic)
+async def get_user_by_name(
+    display_name: str,
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> UserPublic:
+    user = await get_by_display_name(session, display_name)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user not found")
+    return UserPublic(user_id=user.id, display_name=user.display_name)
 
 
 @router.get("/.well-known/jwks.json", response_model=JWKS)

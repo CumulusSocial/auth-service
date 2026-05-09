@@ -48,6 +48,34 @@ def load_keys() -> Keys:
     )
 
 
+SERVICE_NAMESPACE_UUID = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+
+def service_subject(client_id: str) -> uuid.UUID:
+    """Stable UUID for a service client_id, so downstream `sub` parses as UUID."""
+    return uuid.uuid5(SERVICE_NAMESPACE_UUID, f"service:{client_id}")
+
+
+def issue_service_token(*, client_id: str, keys: Keys) -> tuple[str, int]:
+    now = int(time.time())
+    exp = now + settings.service_token_ttl_seconds
+    payload = {
+        "sub": str(service_subject(client_id)),
+        "client_id": client_id,
+        "scope": "service",
+        "iat": now,
+        "exp": exp,
+        "iss": settings.jwt_issuer,
+    }
+    token = jwt.encode(
+        payload,
+        keys.private_pem,
+        algorithm="RS256",
+        headers={"kid": settings.jwt_kid},
+    )
+    return token, settings.service_token_ttl_seconds
+
+
 def issue_token(*, user_id: uuid.UUID, email: str, keys: Keys) -> tuple[str, int]:
     now = int(time.time())
     exp = now + settings.jwt_ttl_seconds

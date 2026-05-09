@@ -31,6 +31,11 @@ class ValidateResponse(BaseModel):
     email: EmailStr
 
 
+class UserPublic(BaseModel):
+    user_id: uuid.UUID
+    display_name: str
+
+
 class JWK(BaseModel):
     kty: str
     use: str

@@ -44,3 +44,9 @@ async def authenticate(
 
 async def get_by_id(session: AsyncSession, user_id: uuid.UUID) -> User | None:
     return await session.scalar(select(User).where(User.id == user_id))
+
+
+async def get_by_display_name(session: AsyncSession, display_name: str) -> User | None:
+    return await session.scalar(
+        select(User).where(User.display_name == display_name).order_by(User.created_at)
+    )

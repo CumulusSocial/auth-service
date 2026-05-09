@@ -27,6 +27,7 @@ services:
       JWT_KID: auth-key-1
       JWT_ISSUER: auth-service
       JWT_TTL_SECONDS: "900"
+      SERVICE_CLIENTS: '{"feed-service":"local-dev-secret"}'
       LOG_LEVEL: INFO
     volumes:
       - ./keys:/app/keys:ro
